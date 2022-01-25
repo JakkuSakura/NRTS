@@ -1,13 +1,13 @@
 [package]
-name = "bevy_template"
+name = "my-civil"
 version = "0.1.0"
-authors = ["Unknown Author <unknown@example.com>"]
-edition = "2018"
+authors = ["Jiangkun QIU <qjk2001@gmail.com>"]
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.5.0"
+bevy = "0.6.0"
 
 # Compile all the *dependencies* in optimized release mode even if `--release` is not passed in
 [profile.dev]
@@ -15,6 +15,6 @@ opt-level = 3
 debug = false
 
 # But compile the project itself in debug mode if `--release` is not passed in
-[profile.dev.package.bevy_template]
+[profile.dev.package.my-civil]
 opt-level = 0
 debug = true

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 fn main() {
-    App::build()
+    App::new()
         .add_plugins(DefaultPlugins)
         .add_startup_system(template_setup.system())
         .add_system(template_animation.system())
