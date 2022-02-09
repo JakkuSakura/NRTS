@@ -1,4 +1,6 @@
-# MyCivil
+# NRTS
+
+NRTS stands for Non-RealTime Strategy game.
 
 Strategy game should not be only about wars, right?
 
