@@ -1,13 +1,7 @@
-[package]
-name = "my-civil"
-version = "0.1.0"
-authors = ["Jiangkun QIU <qjk2001@gmail.com>"]
-edition = "2021"
+[workspace]
+resolver = "2" # Important! wgpu/Bevy needs this! https://doc.rust-lang.org/edition-guide/rust-2021/default-cargo-resolver.html#details
+members = ["core", "server", "client"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-bevy = "0.6.0"
 
 # Compile all the *dependencies* in optimized release mode even if `--release` is not passed in
 [profile.dev]
@@ -15,6 +9,7 @@ opt-level = 3
 debug = false
 
 # But compile the project itself in debug mode if `--release` is not passed in
-[profile.dev.package.my-civil]
+
+[profile.dev.package."*"]
 opt-level = 0
 debug = true

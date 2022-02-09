@@ -1,16 +1,12 @@
-use std::mem::transmute;
 use bevy::math::Vec2;
+use bevy::prelude::*;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Component)]
 pub struct WorldShape {
     pub size: Vec2,
-    // /// regular box
-    // Rectangular {
-    //     width: f32,
-    //     height: f32
-    // }
 }
 
+#[derive(Component)]
 pub struct PhyPos(pub Vec2);
 
 impl PhyPos {
@@ -25,3 +21,10 @@ impl PhyPos {
     }
 }
 
+#[derive(Component)]
+pub struct TargetPos(pub Vec2);
+
+
+// speed per tick: 1/20
+#[derive(Component)]
+pub struct Speed(pub f32);
