@@ -1,6 +1,7 @@
 use crate::models::geometry::PhyPos;
 use crate::models::UniqueEntityId;
 use bevy::ecs::entity::EntityMap;
+use bevy::ecs::system::SystemState;
 use bevy::prelude::*;
 use bevy::reflect::TypeRegistry;
 use bevy::scene::serde::{SceneDeserializer, SceneSerializer};
@@ -38,11 +39,7 @@ pub fn make_world_backup(world: &World) -> Bytes {
         .into()
 }
 
-pub fn restore_world_backup(
-    world: &mut World,
-    query: Query<(Entity, &UniqueEntityId)>,
-    scene: &[u8],
-) {
+pub fn restore_world_backup(world: &mut World, scene: &[u8]) {
     let registry = world.get_resource::<TypeRegistry>().unwrap();
     let registry = registry.read();
 
@@ -52,6 +49,7 @@ pub fn restore_world_backup(
     };
 
     let scene = scene_deserializer.deserialize(&mut deserializer).unwrap();
+    drop(registry);
 
     let mut map = EntityMap::default();
     let uuid_map1 = scene
@@ -67,14 +65,13 @@ pub fn restore_world_backup(
             ))
         })
         .collect::<HashMap<_, _>>();
-
-    for item in query.iter() {
+    let mut state: SystemState<Query<(Entity, &UniqueEntityId)>> = SystemState::new(world);
+    for item in state.get(world).iter() {
         let (entity, uid) = item;
         if let Some(remote_id) = uuid_map1.get(&uid) {
             map.insert(remote_id.clone(), entity.clone());
         }
     }
-    drop(registry);
     scene.write_to_world(world, &mut map).unwrap();
 }
 

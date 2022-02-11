@@ -1,9 +1,10 @@
 use bevy::prelude::*;
 use bevy_networking_turbulence::{NetworkEvent, NetworkResource};
-use nrts_core::network::{decode_response, get_type_registry, NetworkResponse};
+use nrts_core::network::{
+    decode_response, get_type_registry, restore_world_backup, NetworkResponse,
+};
 use std::net::{Ipv4Addr, SocketAddr};
 
-#[derive(Default)]
 struct Args {
     address: SocketAddr,
 }
@@ -13,7 +14,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .insert_resource(get_type_registry())
         .insert_resource(Args {
-            address: ("localhost", 14191).into(),
+            address: SocketAddr::new(Ipv4Addr::new(127, 0, 0, 1).into(), 14191).into(),
         })
         .add_startup_system(template_setup.system())
         .add_startup_system(startup.system())
@@ -30,7 +31,6 @@ fn startup(mut net: ResMut<NetworkResource>, args: Res<Args>) {
 fn handle_packets(
     mut world: ResMut<World>,
     mut net: ResMut<NetworkResource>,
-    time: Res<Time>,
     mut reader: EventReader<NetworkEvent>,
 ) {
     for event in reader.iter() {
@@ -45,7 +45,9 @@ fn handle_packets(
                 let response: NetworkResponse = decode_response(packet.as_ref());
                 info!("Received packet from {:?}: {:?}", handle, response);
                 match response {
-                    NetworkResponse::ResponseWorld() => {}
+                    NetworkResponse::ResponseWorld(scene) => {
+                        restore_world_backup(&mut *world, scene.as_ref())
+                    }
                 }
             }
             NetworkEvent::Error(handle, err) => warn!("{:?} error {:?}!", handle, err),
