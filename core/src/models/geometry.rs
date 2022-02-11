@@ -1,12 +1,14 @@
 use bevy::math::Vec2;
 use bevy::prelude::*;
 
-#[derive(Debug, Copy, Clone, Component)]
+#[derive(Debug, Default, Copy, Clone, Reflect, Component)]
+#[reflect(Component)]
 pub struct WorldShape {
     pub size: Vec2,
 }
 
-#[derive(Component)]
+#[derive(Default, Component, Reflect)]
+#[reflect(Component)]
 pub struct PhyPos(pub Vec2);
 
 impl PhyPos {
@@ -21,10 +23,11 @@ impl PhyPos {
     }
 }
 
-#[derive(Component)]
+#[derive(Default, Component, Reflect)]
+#[reflect(Component)]
 pub struct TargetPos(pub Vec2);
 
-
 // speed per tick: 1/20
-#[derive(Component)]
+#[derive(Default, Component, Reflect)]
+#[reflect(Component)]
 pub struct Speed(pub f32);

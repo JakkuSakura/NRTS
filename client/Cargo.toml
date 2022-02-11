@@ -7,3 +7,6 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.6.0"
+bevy_networking_turbulence = "0.4.1"
+bevy_egui = "0.11.1"
+nrts-core = { path = "../core" }
