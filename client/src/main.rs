@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use bevy_networking_turbulence::{NetworkEvent, NetworkResource};
 use nrts_core::network::{
-    decode_response, get_type_registry, restore_world_backup, NetworkResponse,
+    decode_response, encode_request, get_type_registry, restore_world_backup, NetworkRequest,
+    NetworkResponse, SERVER_PORT,
 };
 use std::net::{Ipv4Addr, SocketAddr};
 
@@ -14,7 +15,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .insert_resource(get_type_registry())
         .insert_resource(Args {
-            address: SocketAddr::new(Ipv4Addr::new(127, 0, 0, 1).into(), 14191).into(),
+            address: SocketAddr::new(Ipv4Addr::new(127, 0, 0, 1).into(), SERVER_PORT).into(),
         })
         .add_startup_system(template_setup.system())
         .add_startup_system(startup.system())
@@ -26,6 +27,8 @@ fn main() {
 fn startup(mut net: ResMut<NetworkResource>, args: Res<Args>) {
     info!("Starting server at {}", args.address);
     net.connect(args.address);
+    net.broadcast(encode_request(&NetworkRequest::RequestWorld))
+        .unwrap();
 }
 
 fn handle_packets(

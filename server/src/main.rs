@@ -1,18 +1,18 @@
 use bevy::app::ScheduleRunnerSettings;
+use bevy::ecs::system::SystemState;
 use bevy::log::*;
 use bevy::prelude::*;
+use bevy::tasks::{IoTaskPool, TaskPool};
 use bevy_networking_turbulence::{
     ConnectionHandle, NetworkEvent, NetworkResource, NetworkingPlugin,
 };
 use nrts_core::core::NrtsCore;
 use nrts_core::network::{
     decode_request, encode_response, get_type_registry, make_world_backup, NetworkRequest,
-    NetworkResponse,
+    NetworkResponse, SERVER_PORT,
 };
 use std::net::{Ipv4Addr, SocketAddr};
 use std::time::Duration;
-
-const SERVER_PORT: u16 = 14191;
 
 struct Args {
     port: u16,
@@ -23,13 +23,14 @@ struct ConnectedClients {
 }
 
 fn main() {
-    App::empty()
+    App::new()
+        .add_plugins(DefaultPlugins)
+        .insert_resource(IoTaskPool(TaskPool::new()))
         .insert_resource(ScheduleRunnerSettings::run_loop(Duration::from_secs_f64(
             1.0 / 60.0,
         )))
         .insert_resource(Args { port: SERVER_PORT })
         .insert_resource(get_type_registry())
-        .add_plugin(LogPlugin)
         .add_plugin(NetworkingPlugin::default())
         .add_plugin(NrtsCore {})
         .add_startup_system(startup.system())
@@ -43,12 +44,11 @@ fn startup(mut net: ResMut<NetworkResource>, args: Res<Args>) {
     net.listen(server_address, None, None);
 }
 
-fn handle_packets(
-    world: ResMut<World>,
-    mut net: ResMut<NetworkResource>,
-    mut clients: ResMut<ConnectedClients>,
-    mut reader: EventReader<NetworkEvent>,
-) {
+fn handle_packets(world: &mut World) {
+    let mut state: SystemState<(ResMut<ConnectedClients>, EventReader<NetworkEvent>)> =
+        SystemState::new(world);
+    let (mut clients, mut reader) = state.get_mut(world);
+    let mut backup_handles = vec![];
     for event in reader.iter() {
         match event {
             NetworkEvent::Connected(handle) => {
@@ -62,18 +62,26 @@ fn handle_packets(
             NetworkEvent::Packet(handle, packet) => {
                 let request = decode_request(packet.as_ref());
                 info!("Got packet on [{}]: {:?}", handle, request);
+
                 match request {
                     NetworkRequest::RequestWorld => {
-                        let backup = make_world_backup(&*world);
-                        net.send(
-                            *handle,
-                            encode_response(&NetworkResponse::ResponseWorld(backup)),
-                        )
-                        .unwrap();
+                        backup_handles.push(*handle);
                     }
                 }
             }
             NetworkEvent::Error(handle, err) => warn!("{:?} error {:?}!", handle, err),
+        }
+    }
+    if !backup_handles.is_empty() {
+        let backup = make_world_backup(&*world);
+        let mut state: SystemState<ResMut<NetworkResource>> = SystemState::new(world);
+        let mut net = state.get_mut(world);
+        for handle in backup_handles {
+            net.send(
+                handle,
+                encode_response(&NetworkResponse::ResponseWorld(backup.clone())),
+            )
+            .unwrap();
         }
     }
 }

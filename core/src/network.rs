@@ -11,6 +11,7 @@ use bincode::Infinite;
 use bytes::Bytes;
 use serde::de::DeserializeSeed;
 use serde::{Deserialize, Serialize};
+pub const SERVER_PORT: u16 = 14191;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum NetworkRequest {
